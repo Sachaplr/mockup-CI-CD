@@ -39,6 +39,8 @@ export function parseJunit(xml) {
   return { total, failed, skipped, passed: total - failed - skipped, failures };
 }
 
+// Playwright colours its error messages with ANSI escape codes (\u001b is a control character on purpose).
+// eslint-disable-next-line no-control-regex
 const stripAnsi = (s) => String(s ?? '').replace(/\u001b\[[0-9;]*m/g, '');
 
 // Playwright's JSON reporter already keeps only test.step() entries (nested via `steps`).
