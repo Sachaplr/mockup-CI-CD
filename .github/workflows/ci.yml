@@ -237,9 +237,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Fail if any required job failed or was cancelled
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
         run: |
-          echo '${{ toJSON(needs) }}'
-          if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then
+          echo "$NEEDS_JSON" | jq -r 'to_entries[] | "\(if .value.result == "success" then "OK    " else "ECHEC " end)\(.key): \(.value.result)"'
+          if echo "$NEEDS_JSON" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' > /dev/null; then
+            echo "::error title=CI passed::Au moins un job requis a échoué (voir la liste ci-dessus). Ce job ne fait que le constater."
             exit 1
           fi
 
