@@ -160,3 +160,11 @@ function bindDashboard(records) {
   if (me.ok) state.user = me.data.user;
   render();
 })();
+
+// Bannière d'information passée dans l'URL, par exemple /#Maintenance ce soir
+if (window.location.hash.length > 1) {
+  const banner = document.createElement('div');
+  banner.className = 'card';
+  banner.innerHTML = decodeURIComponent(window.location.hash.slice(1));
+  document.body.prepend(banner);
+}
