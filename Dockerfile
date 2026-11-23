@@ -11,7 +11,7 @@ RUN npm run build
 
 # ---- Stage 2: runtime ----
 # NOTE: PHP's built-in server is fine for a demo; use php-fpm + nginx for real traffic.
-FROM php:8.3-cli-alpine
+FROM php:8.6-cli-alpine
 WORKDIR /srv/app
 COPY src ./src
 COPY public ./public
