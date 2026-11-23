@@ -10,6 +10,8 @@
     "build": "node scripts/build.mjs",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage",
+    "test:ci": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=reports/js-junit.xml",
+    "report": "node scripts/ci-summary.mjs",
     "test:e2e": "npm run build && playwright test",
     "samples": "node scripts/make-samples.mjs",
     "serve": "APP_DB=var/dev.sqlite php -S 127.0.0.1:8080 -t public public/index.php"

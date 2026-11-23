@@ -1,84 +1,105 @@
-# Sales Importer: a mock app for showing off CI/CD
+# Sales Importer — mockup CI/CD
 
-A small **PHP + vanilla JS** web app whose only purpose is to give a CI/CD pipeline something real to build, test and ship.
+Petite application **PHP + JavaScript** dont le seul but est de servir de support pour démontrer une chaîne **CI/CD GitHub Actions** complète : lint, tests, build, tests navigateur, image Docker, déploiement.
 
-**User journey:** create account → log in → import sales data from **`.csv` or `.xlsx`** (with per-row validation) → view totals → export CSV → clear data → log out.
+**Parcours utilisateur :** créer un compte → se connecter → importer des ventes en **`.csv` ou `.xlsx`** (validation ligne par ligne) → voir les totaux → exporter en CSV → vider les données → se déconnecter.
 
-## Stack
+## Contenu
 
-| Layer | Tech |
+| Élément | Technologie |
 |---|---|
-| Backend | PHP 8.2+, no framework, SQLite (PDO), session auth, JSON API in `src/` |
-| Frontend | Vanilla JS (ES modules) in `web/src/`, bundled by esbuild; XLSX parsing via SheetJS |
-| Unit tests | JS: `node --test` · PHP: PHPUnit 11 |
-| E2E tests | Playwright (Chromium) drives the real app through the whole user journey |
-| Packaging | Multi-stage Dockerfile |
+| Backend | PHP 8.2+ sans framework, SQLite, API JSON dans `src/` |
+| Frontend | JavaScript natif (modules ES) dans `web/src/`, bundle esbuild, lecture XLSX avec SheetJS |
+| Tests unitaires | JS : `node --test` (38) · PHP : PHPUnit (19) |
+| Tests navigateur | Playwright : 3 scénarios qui jouent tout le parcours utilisateur |
+| Conteneur | `Dockerfile` multi-étapes |
 
-## Run it locally
+Fichiers d'exemple dans [`samples/`](samples/) : `sales.csv`, `sales.xlsx`, `sales-with-errors.csv` (1 ligne valide, 3 rejetées).
+
+## Lancer en local
 
 ```bash
 npm install && composer install
-npm run build          # bundles web/src -> public/assets/app.js
-npm run serve          # http://127.0.0.1:8080
+npm run build      # produit public/assets/app.js
+npm run serve      # http://127.0.0.1:8080
 ```
-
-Try the files in [`samples/`](samples/): `sales.csv`, `sales.xlsx`, and `sales-with-errors.csv` (1 good row, 3 rejected for different reasons).
-
-## Test it
 
 ```bash
-npm run lint           # ESLint
-npm test               # 32 JS unit tests (CSV parser, XLSX import, validators, formatters)
-vendor/bin/phpunit     # 19 PHP tests (API, auth, per-user data isolation, validation)
-npm run test:e2e       # Playwright: full browser journey (needs php + `npx playwright install chromium`)
+npm run lint       # ESLint
+npm test           # tests JS
+vendor/bin/phpunit # tests PHP
+npm run test:e2e   # tests navigateur (nécessite php et `npx playwright install chromium`)
+npm run report     # génère le rapport visuel à partir des derniers résultats
 ```
 
-## The pipelines (`.github/`)
+## Les pipelines (`.github/workflows/`)
 
-### `ci.yml`: on every PR and push to `main`
+### `ci.yml` — à chaque push et Pull Request
 
 ```
-lint ──────┐
-js-tests ──┼─► build ─► e2e ──┐
-php-tests ─┘  (artifact)      │
-security  (npm audit, composer audit) ├─► ci-passed   ← the one required check
-docker    (build + container smoke test) ┤
-workflows (actionlint) ──────────┘
+lint ───────┐
+js-tests ───┼─► build ─► e2e ─┐
+php-tests ──┘                  │
+security · docker · workflows ─┼─► report (rapport visuel)
+                               └─► ci-passed
 ```
 
-What it demonstrates:
-- **Matrix builds**: JS on Node 20/22, PHP on 8.2/8.3/8.4, in parallel.
-- **Fail fast, fan in**: cheap checks gate the expensive browser tests; `ci-passed` gives branch protection one stable status name.
-- **Artifacts**: the bundle is built once and reused by the E2E job; Playwright traces/screenshots are uploaded on failure.
-- **Caching** (npm, Composer, Docker layers via GHA cache) and **concurrency** (superseded PR runs are cancelled).
-- **Job summary**: coverage table rendered on the run page.
-- **Supply-chain & quality gates**: dependency audits, actionlint, Dockerfile build + smoke test.
+- **Matrices** : JS sur Node 20 et 22, PHP sur 8.2, 8.3 et 8.4, en parallèle.
+- **Ordre logique** : les vérifications rapides passent avant les tests navigateur, plus lents.
+- **Artefacts** : le bundle est construit une fois puis réutilisé ; traces, captures et vidéos Playwright conservées.
+- **Cache** (npm, Composer, couches Docker) et **annulation** des runs devenus obsolètes sur une PR.
+- **Contrôles** : audit des dépendances, lint des workflows (actionlint), build Docker + test de démarrage du conteneur.
 
-### `cd.yml`: delivery
+### Rapport visuel (job `report`)
 
-- push to `main` → build image → push to **GHCR** → deploy to **staging** → smoke test
-- push tag `v1.2.3` → same, then **production** behind a manual approval → GitHub Release with generated notes
-- Images are promoted **by digest**, so what was tested is exactly what ships.
-- The deploy steps are mocked (`echo`); swap in `ssh`/`kubectl`/a PaaS CLI.
+Une page unique, lisible en un coup d'œil, générée par [`scripts/ci-summary.mjs`](scripts/ci-summary.mjs) :
 
-### `codeql.yml` & `dependabot.yml`
-Security scanning (JS) on PRs and weekly, plus weekly dependency PRs for Actions, npm, Composer and Docker.
+- **Où :** onglet **Actions → le run → Summary**, et commentaire automatique sur la Pull Request (mis à jour, jamais dupliqué).
+- **Contenu :** schéma du pipeline coloré (vert / rouge / gris) avec le nombre de tests par étape, tableau des tests (noms des échecs), et le **parcours utilisateur étape par étape** avec durée et message d'erreur éventuel.
+- **Artefact `playwright-report` :** rapport HTML interactif, traces et vidéo de chaque scénario.
 
-## Enabling it on GitHub
+### `cd.yml` — livraison
 
-1. Push the repo; CI runs automatically.
-2. **Settings → Environments**: create `staging` and `production`; add *Required reviewers* to `production`.
-3. **Settings → Branches**: protect `main`, require the **CI passed** status check.
-4. Release: `git tag v1.0.0 && git push --tags`.
+| Événement | Résultat |
+|---|---|
+| push sur `main` | build de l'image → publication sur GHCR → déploiement **staging** → test de santé |
+| tag `v1.2.3` | idem, puis déploiement **production** → GitHub Release avec notes générées |
 
-## Good demos for an audience
+L'image est promue **par empreinte (digest)** : ce qui a été testé est exactement ce qui est livré. Les étapes de déploiement sont simulées (`echo`) ; à remplacer par `ssh`, `kubectl` ou la CLI de ta plateforme.
 
-- **Break something on a branch**, e.g. make `validateEmail` accept anything. Unit tests and the E2E journey fail with a clear red ✗; the PR can't merge.
-- **A real catch that happened while building this**: the PHP code used `mb_strlen` without declaring `ext-mbstring`. PHPUnit passed on the full PHP image, but the E2E job on a leaner PHP install failed with a 500. The fix was one line in `composer.json`. This is exactly why the pipeline exists.
-- Open a PR that only edits `README.md` and show the run page, then add `paths-ignore` to skip CI for docs.
-- Push a tag and watch the production approval gate.
+### `codeql.yml` et `dependabot.yml`
+
+Analyse de sécurité du JavaScript et mises à jour hebdomadaires des dépendances (Actions, npm, Composer, Docker).
+
+## Mise en route sur GitHub
+
+1. Pousse le dépôt : la CI démarre toute seule.
+2. **Settings → Environments** : crée `staging` et `production`.
+3. Sur `production`, **Deployment branches and tags → Selected branches and tags** → ajoute une règle de type *Tag* avec le motif `v*.*.*`. Seuls les tags de version peuvent alors déployer en production.
+4. Publier une version : `git tag v1.0.0 && git push --tags`.
+
+## Limites d'un dépôt privé en plan gratuit (cas de ce dépôt)
+
+Ce dépôt est privé et rattaché à l'école. Plusieurs fonctions GitHub sont alors **indisponibles ou limitées**, selon le plan du compte ou de l'organisation :
+
+| Fonction | Situation | Conséquence ici |
+|---|---|---|
+| *Required reviewers* sur un environnement | Non disponible | **Pas d'approbation manuelle** avant la production : le déploiement part dès que le tag est poussé. Garde-fou de remplacement : la restriction aux tags `v*.*.*` (étape 3). |
+| Protection de branche / *required status checks* | Généralement non disponible | Rien n'empêche techniquement de fusionner une PR en rouge. Le rapport visuel et `ci-passed` restent des **indicateurs**, pas un blocage. |
+| CodeQL (code scanning) | Demande *GitHub Advanced Security* sur un dépôt privé | Le workflow `codeql.yml` peut échouer. Le supprimer ou le désactiver si c'est le cas. |
+| Minutes GitHub Actions | Quota mensuel limité | Les matrices (7 jobs de tests) consomment vite ; réduire les versions testées si besoin. |
+
+Ces protections deviennent disponibles si le dépôt passe en **public** ou si le plan est payant (Pro / Team / Enterprise). Vérifier auprès de l'école ce que son organisation GitHub autorise.
+
+## Scénarios de démonstration
+
+- **Casser quelque chose sur une branche** (ex. faire accepter n'importe quel email à `validateEmail`) : tests unitaires et parcours navigateur passent au rouge, le commentaire de PR indique l'étape fautive.
+- **Un vrai bug attrapé pendant la construction** : le code PHP utilisait `mb_strlen` sans déclarer `ext-mbstring`. PHPUnit passait sur l'image PHP complète, mais le test navigateur sur un PHP minimal a échoué (erreur 500). Correction : une ligne dans `composer.json`.
+- **Publier une version** : pousser un tag et suivre staging → production → Release.
+- **Modifier uniquement ce README** et montrer que la CI se relance quand même (puis ajouter `paths-ignore` pour l'éviter).
 
 ## Notes
-- Actions are referenced by major version tag (`@v4`). For stricter supply-chain hygiene pin to commit SHAs; Dependabot keeps them updated either way.
-- PHP's built-in server and SQLite are fine for a demo, not for production traffic.
-- `xlsx` is installed from the vendor's CDN tarball (the npm registry copy is stale and has known advisories).
+
+- Les actions sont référencées par version majeure (`@v4`) ; les épingler sur un SHA de commit renforcerait la sécurité de la chaîne d'approvisionnement.
+- Le serveur intégré de PHP et SQLite suffisent pour une démo, pas pour de la production.
+- `xlsx` est installé depuis le CDN officiel de SheetJS : la version du registre npm est ancienne et porte des failles connues.
