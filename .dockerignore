@@ -1,0 +1,10 @@
+.git
+.github
+.claude
+node_modules
+vendor
+var
+tests
+coverage
+playwright-report
+test-results

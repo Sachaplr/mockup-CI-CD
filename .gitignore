@@ -1,0 +1,10 @@
+node_modules/
+vendor/
+var/
+coverage/
+playwright-report/
+test-results/
+public/assets/app.js
+.phpunit.result.cache
+.phpunit.cache/
+.claude/settings.local.json

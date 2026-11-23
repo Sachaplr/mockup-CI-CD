@@ -1,0 +1,27 @@
+{
+  "name": "sales-importer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mock PHP + JS web app used to demonstrate CI/CD pipelines",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "lint": "eslint .",
+    "build": "node scripts/build.mjs",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "test:e2e": "npm run build && playwright test",
+    "samples": "node scripts/make-samples.mjs",
+    "serve": "APP_DB=var/dev.sqlite php -S 127.0.0.1:8080 -t public public/index.php"
+  },
+  "dependencies": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.48.0",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0"
+  }
+}
