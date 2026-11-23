@@ -81,7 +81,7 @@ Dans la liste Actions, filtre **Workflow ▾ → CI** et **Branch ▾ → main**
 
 ![Message d'erreur du lint](img/05-rouge-logs.png)
 
-### 📸 A6 — `06-retour-vert.png`
+### ✅ A6 — `06-retour-vert.png` *(déjà faite)*
 - **Où :** onglet **Actions**, liste des runs, avec les filtres **Workflow ▾ → CI** et **Branch ▾ → main**.
 - **Doit montrer, l'une sous l'autre, dans la même capture :** la ligne **CI #9 ✅** (« feat(ci): authorize control char ANSI… ») juste au-dessus de la ligne **CI #7 ❌** (« feat(visual): add a way to see… »).
 - **Ce que ça démontre :** l'historique raconte tout seul « rouge, correction, vert », avec la durée de chaque run.
@@ -220,7 +220,7 @@ Sur un dépôt privé en plan gratuit, GitHub n'empêche pas de fusionner une Pu
 | A3 | `03-rouge-graphe.png` | **CI #7** → Summary, haut | Lint ❌, Build/E2E grisés | ✅ fait |
 | A4 | `04-rouge-rapport.png` | **CI #7** → Summary, rapport | « 1 étape(s) en échec : Lint » | ✅ fait |
 | A5 | `05-rouge-logs.png` | **CI #7** → job Lint → étape rouge | `no-control-regex`, fichier:ligne | ✅ fait |
-| A6 | `06-retour-vert.png` | Actions, filtres CI + main | CI #9 ✅ au-dessus de CI #7 ❌ | à faire |
+| A6 | `06-retour-vert.png` | Actions, filtres CI + main | CI #9 ✅ au-dessus de CI #7 ❌ | ✅ fait |
 | B1 | `07-e2e-graphe.png` | Run `demo-bug` → Summary, haut | Seul E2E ❌ | après étape 2 |
 | B2 | `08-e2e-rapport.png` | Run `demo-bug` → rapport | Étape 2 du parcours ❌ | après étape 2 |
 | B3 | `09-e2e-commentaire-pr.png` | PR → Conversation | Commentaire « 🚦 » rouge | après étape 2 |
