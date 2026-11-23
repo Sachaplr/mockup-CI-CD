@@ -1,4 +1,4 @@
-# À quoi servent les pipelines ? Démonstration en 2 parties
+# À quoi servent les pipelines ? Démonstration en 3 parties
 
 À chaque modification du code, GitHub rejoue automatiquement tous les tests. Si un bug s'est glissé, **la page Actions devient rouge et indique exactement quoi corriger** ; une fois corrigé, un nouveau passage la remet au vert, sans que personne n'ait à tester à la main.
 
@@ -6,6 +6,7 @@
 |---|---|
 | **A — Un incident réel** | Une erreur de lint fait échouer la CI. Elle est corrigée, la CI repasse au vert. |
 | **B — Un bug dans le navigateur** | Un bug que les tests unitaires ne voient pas, attrapé uniquement par le test dans un vrai navigateur. |
+| **C — Une faille de sécurité** | Une faille que **ni les tests ni le navigateur** ne voient, signalée par CodeQL. |
 
 > Tout se consulte dans l'onglet **Actions** de GitHub : cliquer sur le titre d'un run ouvre sa page **Summary**, avec le graphe des jobs en haut, le rapport « 🚦 Résultat du pipeline » en dessous et les artefacts tout en bas.
 
@@ -155,6 +156,59 @@ Le push relance **automatiquement** tous les tests sur la même Pull Request. Ce
 
 ---
 
+# Partie C — Une faille de sécurité que seul CodeQL voit
+
+Ici, tout fonctionne : lint, tests JS et PHP, build et parcours navigateur sont ✅. Pourtant le code contient une **faille**. C'est le rôle de CodeQL : analyser le code source à la recherche de vulnérabilités connues, sans l'exécuter.
+
+## 1. Référence : aucune alerte
+
+![CodeQL sans alerte](img/12-codeql-sans-alerte.png)
+
+## 2. Introduire la faille
+
+```bash
+git checkout main && git pull
+git checkout -b demo-security
+git apply docs/demo/bug-3-codeql.patch
+git commit -am "feat: bannière d'information dans l'URL"
+git push -u origin demo-security
+```
+
+Le patch ajoute une « bannière » qui affiche dans la page le texte placé après le `#` de l'adresse :
+
+```diff
++// Bannière d'information passée dans l'URL, par exemple /#Maintenance ce soir
++if (window.location.hash.length > 1) {
++  const banner = document.createElement('div');
++  banner.className = 'card';
++  banner.innerHTML = decodeURIComponent(window.location.hash.slice(1));
++  document.body.prepend(banner);
++}
+```
+
+Le texte de l'URL est inséré **tel quel comme du HTML**. Un lien piégé comme `https://…/#<img src=x onerror=alert(1)>` ferait exécuter du code dans le navigateur de la victime : c'est une faille **XSS** (*cross-site scripting*). Pour un utilisateur normal, l'application marche comme avant, d'où l'absence d'erreur dans les tests.
+
+## 3. CodeQL signale l'alerte
+
+Sur la page Summary du run **CodeQL** de la Pull Request, la section « 🔒 Analyse de sécurité » liste l'alerte : règle `js/xss`, fichier `web/src/app.js`, ligne 168, « Cross-site scripting vulnerability due to user-provided value ».
+
+![CodeQL avec une alerte](img/13-codeql-avec-alerte.png)
+
+> Le job reste ✅ même avec une alerte : en mode autonome, CodeQL **informe sans bloquer**. Il faut lire la page Summary, pas la couleur du job.
+
+## 4. Corriger
+
+On insère le contenu comme du **texte** (`textContent`), jamais interprété comme du HTML :
+
+```diff
+-  banner.innerHTML = decodeURIComponent(window.location.hash.slice(1));
++  banner.textContent = decodeURIComponent(window.location.hash.slice(1));
+```
+
+Après le push, le run CodeQL suivant n'affiche plus d'alerte.
+
+---
+
 ## Ce que la démo prouve
 
 | Sans pipeline | Avec pipeline |
@@ -165,14 +219,14 @@ Le push relance **automatiquement** tous les tests sur la même Pull Request. Ce
 | On cherche où est le problème | Le rapport indique **l'étape, le fichier, la ligne et le message** |
 | Corriger puis espérer | On corrige, on pousse, on **voit** le retour au vert |
 
-Les deux parties sont complémentaires : le **lint et les tests unitaires** sont rapides et précis (quelle ligne, quelle fonction) ; le **test navigateur** attrape ce qu'ils ne voient pas, ici un bug d'assemblage entre l'écran et le serveur.
+Les trois niveaux sont complémentaires : le **lint et les tests unitaires** sont rapides et précis (quelle ligne, quelle fonction) ; le **test navigateur** attrape ce qu'ils ne voient pas, ici un bug d'assemblage entre l'écran et le serveur ; **CodeQL** repère les failles de sécurité que personne n'a pensé à tester.
 
 ## Remettre le dépôt à zéro
 
 ```bash
 git checkout main
-git branch -D demo-bug
-git push origin --delete demo-bug
+git branch -D demo-bug demo-security
+git push origin --delete demo-bug demo-security
 ```
 
 ## Remarque sur ce dépôt (privé)

@@ -67,9 +67,23 @@ Une page unique, lisible en un coup d'œil, générée par [`scripts/ci-summary.
 
 L'image est promue **par empreinte (digest)** : ce qui a été testé est exactement ce qui est livré. Les étapes de déploiement sont simulées (`echo`) ; à remplacer par `ssh`, `kubectl` ou la CLI de ta plateforme.
 
-### `codeql.yml` et `dependabot.yml`
+### `codeql.yml` — analyse de sécurité du code
 
-Analyse de sécurité du JavaScript (alertes sur la page Summary du run) et mises à jour hebdomadaires des dépendances (Actions, npm, Composer, Docker).
+CodeQL lit le code JavaScript **sans l'exécuter** et cherche des failles connues (injection de script, expression régulière exploitable, secret en clair…), y compris là où aucun test n'existe. Il se lance à chaque push, chaque Pull Request et chaque lundi.
+
+Le *code scanning* de GitHub n'étant pas activé sur ce dépôt privé, il tourne en **mode autonome** : les alertes s'affichent sur la page **Summary** du run (section « 🔒 Analyse de sécurité ») et le fichier complet est téléchargeable (artefact `codeql-sarif`). Le job reste ✅ même avec une alerte : il informe sans bloquer.
+
+**Aucune alerte :**
+
+![CodeQL sans alerte](docs/img/12-codeql-sans-alerte.png)
+
+**Une alerte :** ici une faille XSS (`js/xss`) signalée dans `web/src/app.js`, à la ligne 168. Le scénario complet est dans [docs/DEMO.md](docs/DEMO.md#partie-c--une-faille-de-sécurité-que-seul-codeql-voit).
+
+![CodeQL avec une alerte](docs/img/13-codeql-avec-alerte.png)
+
+### `dependabot.yml`
+
+Mises à jour hebdomadaires des dépendances (Actions, npm, Composer, Docker), proposées sous forme de Pull Requests.
 
 ## Mise en route sur GitHub
 
