@@ -136,7 +136,7 @@ function bindDashboard(records) {
   });
 
   root.querySelector('#confirm-import')?.addEventListener('click', async () => {
-    const res = await api.importRows(state.pending.valid.slice(0, -1));
+    const res = await api.importRows(state.pending.valid);
     state.importError = res.ok ? null : (res.data.error ?? 'Import failed');
     state.importResult = res.ok ? `Imported ${res.data.imported} row(s)` : null;
     state.pending = null;
