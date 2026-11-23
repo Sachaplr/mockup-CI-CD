@@ -100,7 +100,7 @@ Lint, tests unitaires, build, audit et Docker sont ✅. Seul **« E2E user journ
 
 ![Seul l'E2E est rouge](img/07-e2e-graphe.png)
 
-Dans la Pull Request, le panneau des vérifications montre la même chose : **E2E user journey ❌**, **CI passed ❌**, CodeQL ignoré (⊘) et 11 vérifications ✅.
+Dans la Pull Request, le panneau des vérifications montre la même chose : **E2E user journey ❌**, **CI passed ❌** et les autres vérifications ✅ (CodeQL y apparaît ⊘ sur cette capture, prise avant son passage en mode autonome).
 
 ![Panneau des vérifications de la PR](img/07b-pr-verifications.png)
 
@@ -177,4 +177,4 @@ git push origin --delete demo-bug
 
 ## Remarque sur ce dépôt (privé)
 
-Sur un dépôt privé en plan gratuit, GitHub n'empêche pas de fusionner une Pull Request rouge (« Merging can be performed automatically ») : le pipeline **informe** mais ne **bloque** pas. La démonstration reste identique ; seule la règle « interdit de fusionner si rouge » dépend du plan (voir le [README](../README.md#limites-dun-dépôt-privé-en-plan-gratuit-cas-de-ce-dépôt)). CodeQL est désactivé pour la même raison : le *code scanning* n'est pas activé sur ce dépôt.
+Sur un dépôt privé en plan gratuit, GitHub n'empêche pas de fusionner une Pull Request rouge (« Merging can be performed automatically ») : le pipeline **informe** mais ne **bloque** pas. La démonstration reste identique ; seule la règle « interdit de fusionner si rouge » dépend du plan (voir le [README](../README.md#limites-dun-dépôt-privé-en-plan-gratuit-cas-de-ce-dépôt)). CodeQL fonctionne en mode autonome pour la même raison : le *code scanning* n'est pas activé sur ce dépôt, donc ses alertes s'affichent sur la page Summary du run plutôt que dans l'onglet Security.
