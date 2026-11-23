@@ -1,12 +1,20 @@
 name: CodeQL
 
-# Static security analysis of the JavaScript. (CodeQL has no PHP support.)
+# Static security analysis of the JavaScript (CodeQL has no PHP support).
+#
+# Two modes, chosen automatically:
+#   * Security-tab mode: results are uploaded to GitHub's "Security -> Code scanning" tab.
+#     Needs code scanning to be enabled, i.e. a PUBLIC repo, or a private repo with GitHub
+#     Code Security. Set the repository variable ENABLE_CODEQL=true to force it on a private repo.
+#   * Standalone mode (private repo without code scanning): the analysis still runs, the results
+#     are kept as a downloadable SARIF artifact and the alerts are listed on the run's Summary page.
 on:
   pull_request:
   push:
     branches: [main]
   schedule:
     - cron: '23 4 * * 1' # weekly, catches newly published query packs
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,18 +24,58 @@ jobs:
     name: Analyze JavaScript
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    # OFF by default: on a private repo, GitHub only accepts the results when code scanning
-    # (GitHub Advanced Security) is enabled. To turn it on: Settings -> Secrets and variables ->
-    # Actions -> Variables -> new variable ENABLE_CODEQL = true (always on for public repos).
-    # Dependabot PRs get a read-only token, so CodeQL can never upload results there.
-    if: ${{ (vars.ENABLE_CODEQL == 'true' || !github.event.repository.private) && github.actor != 'dependabot[bot]' }}
     permissions:
-      actions: read # required by CodeQL on private repositories (reads the workflow run)
+      actions: read # required by CodeQL on private repositories
       contents: read
-      security-events: write # upload results to the Security tab
+      security-events: write # upload to the Security tab (security-tab mode only)
+    env:
+      # Dependabot PRs get a read-only token, so they can never upload to the Security tab.
+      UPLOAD_MODE: ${{ (vars.ENABLE_CODEQL == 'true' || !github.event.repository.private) && github.actor != 'dependabot[bot]' && 'always' || 'never' }}
     steps:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
-      - uses: github/codeql-action/analyze@v3
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          upload: ${{ env.UPLOAD_MODE }}
+          output: sarif-results
+
+      - name: List the alerts on the run summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo '## 🔒 Analyse de sécurité (CodeQL)'
+            echo
+            if [ "$UPLOAD_MODE" = always ]; then
+              echo 'Résultats envoyés dans **Security → Code scanning**.'
+            else
+              echo "Mode autonome : résultats non envoyés à l'onglet Security (code scanning non activé), conservés dans l'artefact **codeql-sarif**."
+            fi
+            echo
+            sarif=$(find sarif-results -name '*.sarif' 2>/dev/null | head -n 1)
+            if [ -z "$sarif" ]; then
+              echo "❌ Aucun résultat produit : voir les logs de l'étape Analyze."
+            else
+              count=$(jq '[.runs[].results[]?] | length' "$sarif")
+              if [ "$count" = 0 ]; then
+                echo "✅ **Aucune alerte** : CodeQL n'a trouvé aucune vulnérabilité connue dans le JavaScript."
+              else
+                echo "⚠️ **$count alerte(s)** à examiner :"
+                echo
+                echo '| Gravité | Règle | Emplacement | Message |'
+                echo '|---|---|---|---|'
+                jq -r '.runs[].results[]? | "| \(.level // "warning") | `\(.ruleId)` | \(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine) | \(.message.text | gsub("\n"; " ") | gsub("\\|"; "/")) |"' "$sarif"
+              fi
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the raw results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif
+          path: sarif-results
+          if-no-files-found: ignore
+          retention-days: 14

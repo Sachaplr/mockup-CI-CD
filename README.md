@@ -69,7 +69,7 @@ L'image est promue **par empreinte (digest)** : ce qui a été testé est exacte
 
 ### `codeql.yml` et `dependabot.yml`
 
-Analyse de sécurité du JavaScript et mises à jour hebdomadaires des dépendances (Actions, npm, Composer, Docker).
+Analyse de sécurité du JavaScript (alertes sur la page Summary du run) et mises à jour hebdomadaires des dépendances (Actions, npm, Composer, Docker).
 
 ## Mise en route sur GitHub
 
@@ -86,7 +86,7 @@ Ce dépôt est privé et rattaché à l'école. Plusieurs fonctions GitHub sont 
 |---|---|---|
 | *Required reviewers* sur un environnement | Non disponible | **Pas d'approbation manuelle** avant la production : le déploiement part dès que le tag est poussé. Garde-fou de remplacement : la restriction aux tags `v*.*.*` (étape 3). |
 | Protection de branche / *required status checks* | Généralement non disponible | Rien n'empêche techniquement de fusionner une PR en rouge. Le rapport visuel et `ci-passed` restent des **indicateurs**, pas un blocage. |
-| CodeQL (code scanning) | Demande que le *code scanning* soit activé sur le dépôt (GitHub Advanced Security si privé) | **Désactivé par défaut** (job ignoré ⊘). Pour l'activer : variable de dépôt `ENABLE_CODEQL = true`. Toujours actif si le dépôt est public. |
+| CodeQL (onglet *Security → Code scanning*) | Demande que le *code scanning* soit activé (dépôt public, ou GitHub Code Security si privé) | **Fonctionne quand même** en mode autonome : l'analyse tourne, les alertes sont listées sur la page *Summary* du run et le fichier de résultats est téléchargeable (artefact `codeql-sarif`). Seul l'onglet Security reste vide. Pour l'activer : dépôt public, ou variable `ENABLE_CODEQL = true`. |
 | Minutes GitHub Actions | Quota mensuel limité | Les matrices (7 jobs de tests) consomment vite ; réduire les versions testées si besoin. |
 
 Ces protections deviennent disponibles si le dépôt passe en **public** ou si le plan est payant (Pro / Team / Enterprise). Vérifier auprès de l'école ce que son organisation GitHub autorise.
