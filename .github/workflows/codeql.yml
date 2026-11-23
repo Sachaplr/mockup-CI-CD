@@ -16,9 +16,12 @@ jobs:
     name: Analyze JavaScript
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # Dependabot PRs get a read-only token: CodeQL cannot upload its results there.
+    if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
+      actions: read # required by CodeQL on private repositories (reads the workflow run)
       contents: read
-      security-events: write
+      security-events: write # upload results to the Security tab
     steps:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3

@@ -1,0 +1,13 @@
+diff --git a/web/src/app.js b/web/src/app.js
+index 7e86f99..06bf265 100644
+--- a/web/src/app.js
++++ b/web/src/app.js
+@@ -136,7 +136,7 @@ function bindDashboard(records) {
+   });
+ 
+   root.querySelector('#confirm-import')?.addEventListener('click', async () => {
+-    const res = await api.importRows(state.pending.valid);
++    const res = await api.importRows(state.pending.valid.slice(0, -1));
+     state.importError = res.ok ? null : (res.data.error ?? 'Import failed');
+     state.importResult = res.ok ? `Imported ${res.data.imported} row(s)` : null;
+     state.pending = null;

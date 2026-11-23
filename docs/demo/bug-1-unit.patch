@@ -1,0 +1,11 @@
+diff --git a/web/src/validators.js b/web/src/validators.js
+index c65a36d..5afe50a 100644
+--- a/web/src/validators.js
++++ b/web/src/validators.js
+@@ -1,5 +1,5 @@
+ // Client-side validation. The PHP Validator enforces the same rules server-side.
+-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
++const EMAIL_RE = /^[^\s@]+@/;
+ 
+ export function validateEmail(email) {
+   return typeof email === 'string' && email.length <= 254 && EMAIL_RE.test(email);
