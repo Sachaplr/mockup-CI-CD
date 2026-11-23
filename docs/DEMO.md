@@ -22,7 +22,7 @@
    - **tout en bas** : la section **Artifacts**.
 4. Pour les **logs d'un job** : clique sur son nom dans le graphe (ou dans la colonne de gauche), puis sur l'étape marquée ❌ pour la déplier.
 
-> ℹ️ **CodeQL** était ❌ sur les anciens runs (permission `actions: read` manquante, corrigée dans [`codeql.yml`](../.github/workflows/codeql.yml)). Les nouveaux runs seront ✅. Pour ne regarder que le pipeline principal, utilise le filtre **Workflow ▾ → CI** en haut de la liste.
+> ℹ️ **CodeQL** est désactivé sur ce dépôt privé : le *code scanning* n'y est pas activé (voir le [README](../README.md)). Son job apparaît donc grisé (⊘), sans rapport avec la démo. Pour ne regarder que le pipeline principal, utilise le filtre **Workflow ▾ → CI** en haut de la liste.
 
 ---
 
@@ -132,6 +132,14 @@ Sur GitHub, un bandeau jaune « **demo-bug had recent pushes — Compare & pull 
 - **Ce que ça démontre :** lint, tests unitaires et build passent, mais l'application est cassée. Seul le test navigateur le voit.
 
 ![Seul l'E2E est rouge](img/07-e2e-graphe.png)
+
+> 💡 **« Pourquoi 3 échecs alors que je n'ai cassé qu'une chose ? »**
+> Dans le panneau des vérifications de la PR, tu peux voir « CI / E2E user journey ❌ » et « CI / CI passed ❌ ». Ce n'est **qu'un seul vrai problème** :
+> - **E2E user journey ❌** : la **cause** (le bug).
+> - **CI passed ❌** : une **conséquence** : ce job-récapitulatif échoue automatiquement dès qu'un job requis échoue. Son rôle est d'offrir **une seule vérification à surveiller** ; son log liste les jobs (`OK lint`, `ECHEC e2e`…).
+> - Un éventuel 3ᵉ rouge (CodeQL) n'a **aucun lien** : il vient de la configuration du dépôt, pas du code.
+>
+> Règle de lecture : **toujours traiter le job rouge le plus en amont** ; les autres suivent.
 
 ### 📸 B2 — `08-e2e-rapport.png`
 - **Où :** même page Summary → descends jusqu'à la section « 🎭 Parcours utilisateur, étape par étape ».

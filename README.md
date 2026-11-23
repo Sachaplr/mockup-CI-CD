@@ -86,7 +86,7 @@ Ce dépôt est privé et rattaché à l'école. Plusieurs fonctions GitHub sont 
 |---|---|---|
 | *Required reviewers* sur un environnement | Non disponible | **Pas d'approbation manuelle** avant la production : le déploiement part dès que le tag est poussé. Garde-fou de remplacement : la restriction aux tags `v*.*.*` (étape 3). |
 | Protection de branche / *required status checks* | Généralement non disponible | Rien n'empêche techniquement de fusionner une PR en rouge. Le rapport visuel et `ci-passed` restent des **indicateurs**, pas un blocage. |
-| CodeQL (code scanning) | Fonctionne sur ce dépôt, avec la permission `actions: read` | Ignoré sur les PR Dependabot (jeton en lecture seule). Selon l'organisation, l'onglet *Security* peut être limité. |
+| CodeQL (code scanning) | Demande que le *code scanning* soit activé sur le dépôt (GitHub Advanced Security si privé) | **Désactivé par défaut** (job ignoré ⊘). Pour l'activer : variable de dépôt `ENABLE_CODEQL = true`. Toujours actif si le dépôt est public. |
 | Minutes GitHub Actions | Quota mensuel limité | Les matrices (7 jobs de tests) consomment vite ; réduire les versions testées si besoin. |
 
 Ces protections deviennent disponibles si le dépôt passe en **public** ou si le plan est payant (Pro / Team / Enterprise). Vérifier auprès de l'école ce que son organisation GitHub autorise.

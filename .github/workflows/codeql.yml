@@ -16,8 +16,11 @@ jobs:
     name: Analyze JavaScript
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    # Dependabot PRs get a read-only token: CodeQL cannot upload its results there.
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    # OFF by default: on a private repo, GitHub only accepts the results when code scanning
+    # (GitHub Advanced Security) is enabled. To turn it on: Settings -> Secrets and variables ->
+    # Actions -> Variables -> new variable ENABLE_CODEQL = true (always on for public repos).
+    # Dependabot PRs get a read-only token, so CodeQL can never upload results there.
+    if: ${{ (vars.ENABLE_CODEQL == 'true' || !github.event.repository.private) && github.actor != 'dependabot[bot]' }}
     permissions:
       actions: read # required by CodeQL on private repositories (reads the workflow run)
       contents: read
