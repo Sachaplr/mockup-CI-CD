@@ -126,12 +126,20 @@ Sur GitHub, un bandeau jaune « **demo-bug had recent pushes — Compare & pull 
 
 ## Captures à prendre
 
-### 📸 B1 — `07-e2e-graphe.png`
-- **Où :** onglet **Pull requests** → ta PR → en bas, la ligne « CI / … » → **Details** (ou Actions → le run de la branche `demo-bug`) → page Summary, graphe en haut.
+### ✅ B1 — `07-e2e-graphe.png` *(déjà faite)*
+- **Où :** dans ta PR, panneau des vérifications → ligne « CI / E2E user journey (Playwright) » → **Details** → en haut à gauche de la page, clique sur **Summary**. Tu arrives sur la page du run avec le **graphe des jobs** en haut.
+- **Autre chemin :** onglet **Actions** → le run « CI » de la branche `demo-bug` (le plus récent).
 - **Doit montrer :** tout en ✅ **sauf** « E2E user journey (Playwright) » en ❌.
 - **Ce que ça démontre :** lint, tests unitaires et build passent, mais l'application est cassée. Seul le test navigateur le voit.
 
 ![Seul l'E2E est rouge](img/07-e2e-graphe.png)
+
+### ✅ B1 bis — `07b-pr-verifications.png` *(déjà faite)*
+- **Où :** onglet **Pull requests** → ta PR → panneau « Some checks were not successful », sous la conversation.
+- **Montre :** **CI passed ❌** et **E2E user journey ❌** (les 2 échecs), **CodeQL ignoré ⊘**, 11 vérifications ✅, et en bas « No conflicts with base branch ».
+- **Ce que ça démontre :** le relecteur voit l'état **directement dans la PR**. À noter : GitHub propose quand même « Merging can be performed automatically » : sur ce dépôt privé, un pipeline rouge **n'empêche pas** la fusion (voir la remarque en fin de guide).
+
+![Panneau des vérifications de la PR](img/07b-pr-verifications.png)
 
 > 💡 **« Pourquoi 3 échecs alors que je n'ai cassé qu'une chose ? »**
 > Dans le panneau des vérifications de la PR, tu peux voir « CI / E2E user journey ❌ » et « CI / CI passed ❌ ». Ce n'est **qu'un seul vrai problème** :
@@ -141,7 +149,7 @@ Sur GitHub, un bandeau jaune « **demo-bug had recent pushes — Compare & pull 
 >
 > Règle de lecture : **toujours traiter le job rouge le plus en amont** ; les autres suivent.
 
-### 📸 B2 — `08-e2e-rapport.png`
+### ✅ B2 — `08-e2e-rapport.png` *(déjà faite)*
 - **Où :** même page Summary → descends jusqu'à la section « 🎭 Parcours utilisateur, étape par étape ».
 - **Doit montrer :** « ✅ 1. Créer un compte » puis « ❌ **2. Importer un CSV avec erreurs : seule la ligne valide est acceptée** » avec le message d'erreur dessous.
 - **Ce que ça démontre :** on sait **à quel moment du parcours** ça casse.
@@ -155,17 +163,22 @@ Exemple de ce que tu dois voir (exécution réelle) :
 
 ![Rapport E2E avec l'étape en échec](img/08-e2e-rapport.png)
 
-### 📸 B3 — `09-e2e-commentaire-pr.png`
-- **Où :** onglet **Pull requests** → ta PR → onglet **Conversation** → le commentaire du bot « 🚦 Résultat du pipeline ».
+### ✅ B3 — `09-e2e-commentaire-pr.png` *(déjà faite)*
+- **Où :** onglet **Pull requests** → ta PR → **Conversation** → le commentaire du bot « 🚦 Résultat du pipeline » (le même schéma s'affiche aussi en haut de la page Summary du run).
 - **Doit montrer :** le verdict « ❌ 1 étape(s) en échec : Parcours E2E » directement dans la PR.
 - **Ce que ça démontre :** le relecteur voit le problème **sans quitter la PR**.
 
 ![Commentaire automatique dans la PR](img/09-e2e-commentaire-pr.png)
 
-### 📸 B4 — `10-artefacts.png`
-- **Où :** page Summary du run → **tout en bas**, section **Artifacts**.
-- **Doit montrer :** la ligne **playwright-report** (et `report-e2e`, `app-bundle`).
-- **Ce que ça démontre :** les preuves (rapport HTML, traces, **vidéo du parcours**) sont conservées et téléchargeables.
+### ✅ B4 — `10-artefacts.png` *(déjà faite)*
+- **Quel run ?** Celui de **ta PR `demo-bug`, le run qui a échoué** (celui des captures B1 à B3). Chaque run a ses propres artefacts. **Pas** un run de `main` ni de Dependabot.
+- **Comment y aller :**
+  1. Ta PR → panneau des vérifications → ligne « CI / E2E user journey » → **Details**.
+  2. En haut à gauche de la page, clique sur **Summary**.
+  3. **Descends tout en bas** de la page, jusqu'à la section **Artifacts**.
+- **Doit montrer :** la liste des artefacts, dont **`playwright-report`**, avec leur taille. Il y a aussi `report-e2e`, `report-js`, `report-php` et `app-bundle`, ainsi qu'un fichier `….dockerbuild` ajouté automatiquement par l'étape de build Docker (résumé du build).
+- **Ce que ça démontre :** les preuves (rapport HTML, traces, **vidéo du parcours**) sont conservées et téléchargeables, même quand le test échoue.
+- **À faire avant de corriger :** pas obligatoire (l'ancien run reste consultable), mais c'est plus simple tant que ce run est le dernier de la PR.
 
 ![Artefacts](img/10-artefacts.png)
 
@@ -219,7 +232,7 @@ Sur un dépôt privé en plan gratuit, GitHub n'empêche pas de fusionner une Pu
 
 ---
 
-## Récapitulatif : les 11 captures
+## Récapitulatif : les 12 captures
 
 | N° | Fichier | Run / page | Ce qui doit être visible | État |
 |---|---|---|---|---|
@@ -229,8 +242,9 @@ Sur un dépôt privé en plan gratuit, GitHub n'empêche pas de fusionner une Pu
 | A4 | `04-rouge-rapport.png` | **CI #7** → Summary, rapport | « 1 étape(s) en échec : Lint » | ✅ fait |
 | A5 | `05-rouge-logs.png` | **CI #7** → job Lint → étape rouge | `no-control-regex`, fichier:ligne | ✅ fait |
 | A6 | `06-retour-vert.png` | Actions, filtres CI + main | CI #9 ✅ au-dessus de CI #7 ❌ | ✅ fait |
-| B1 | `07-e2e-graphe.png` | Run `demo-bug` → Summary, haut | Seul E2E ❌ | après étape 2 |
-| B2 | `08-e2e-rapport.png` | Run `demo-bug` → rapport | Étape 2 du parcours ❌ | après étape 2 |
-| B3 | `09-e2e-commentaire-pr.png` | PR → Conversation | Commentaire « 🚦 » rouge | après étape 2 |
-| B4 | `10-artefacts.png` | Run → bas de page | Artefact `playwright-report` | après étape 2 |
+| B1 | `07-e2e-graphe.png` | Run `demo-bug` → Summary, haut | Seul E2E ❌ | ✅ fait |
+| B1b | `07b-pr-verifications.png` | PR → panneau des vérifications | CI passed ❌, E2E ❌, CodeQL ⊘ | ✅ fait |
+| B2 | `08-e2e-rapport.png` | Run `demo-bug` → rapport | Étape 2 du parcours ❌ | ✅ fait |
+| B3 | `09-e2e-commentaire-pr.png` | PR → Conversation | Commentaire « 🚦 » rouge | ✅ fait |
+| B4 | `10-artefacts.png` | Run → bas de page | Artefact `playwright-report` | ✅ fait |
 | B5 | `11-e2e-vert.png` | Nouveau run après correction | E2E ✅, 3/3 parcours | après étape 3 |
